@@ -1,0 +1,214 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto");
+
+html
+{
+    background-color: rgb(30, 30, 30);
+    font-family: "Roboto";
+    color: white;
+}
+
+body
+{
+    margin: 0px;
+}
+
+h1
+{
+    font-size: 40px;
+}
+
+table
+{
+    border-collapse: separate; 
+    border-spacing: 5px;
+}
+
+#playbackButton
+{
+    width: 9vh;
+    height: 9vh;
+    background-size: contain;
+    background-color: rgb(48, 48, 48);
+    border: solid;
+    border-width: 2px;
+    border-radius: 50%;
+    border-color: rgb(180, 180, 180);
+    transition: border-color 0.075s;
+}
+
+#playbackButton:hover
+{
+    border-color: rgb(120, 120, 120);
+}
+
+#typedGuess
+{
+    margin: 0px 20px 0px 20px;
+    padding: 10px;
+    width: 28vw;
+    height: 3vh;
+    color: white;
+    background-color: rgb(40, 40, 40);
+    border: solid;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: white;
+    font-size: 16px;
+    font-family: "Roboto";
+    transition: color 0.075s;
+}
+
+#typedGuess:hover
+{
+    color: rgb(200, 200, 200);
+}
+
+.margin-top
+{
+    margin: auto;
+    margin-top: 20px;
+}
+
+.auto-margin
+{
+    margin: 0 auto;
+}
+
+.padding
+{
+    padding: 20px;
+}
+
+.padding-top
+{
+    padding-top: 38px;
+}
+
+.padding-horizontal
+{
+    padding-left: 20px;
+    padding-right: 10px;
+}
+
+.max-width
+{
+    width: auto;
+}
+
+.large-width
+{
+    width: 55vw;
+}
+
+.centered
+{
+    text-align: center;
+}
+
+.inline
+{
+    display: inline;
+}
+
+.inline-block
+{
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.middle-vertical-align
+{
+    vertical-align: middle;
+}
+
+.spacing
+{
+    margin: 10px;
+    text-align: center;
+}
+
+.red-text
+{
+    color: indianred;
+}
+
+.green-text
+{
+    color: lightgreen;
+}
+
+.grey-text
+{
+    color: darkgrey;
+}
+
+.dark-background
+{
+    background-color: rgb(25, 25, 25);
+}
+
+.blue-background
+{
+    background-color: rgb(81, 130, 145);
+}
+
+.grey-background
+{
+    background-color: rgb(90, 90, 90);
+}
+
+.header
+{
+    margin: 0px;
+    padding: 20px;
+    background-color: rgb(25, 25, 25);
+}
+
+.wrong-guess-row
+{
+    padding: 10px;
+    padding-left: 20px;
+    height: 5vh;
+    text-align: left;
+    font-weight: bold;
+    background-color: rgb(50, 50, 50);
+}
+
+.fit-content
+{
+    padding: 10px;
+    width: fit-content;
+    height: fit-content;
+}
+
+.album-placeholder
+{
+    width: 100px;
+    height: 100px;
+    background-color: rgb(15, 15, 15);
+}
+
+.fancy-button
+{
+    padding: 10px;
+    width: 5vw;
+    color: white;
+    border: solid transparent;
+    border-width: 1px;
+    border-color: white;
+    font-size: 16px;
+    font-weight: bold;
+    font-family: "Roboto";
+    transition: color 0.075s, border-color 0.075s;
+}
+
+.fancy-button:hover
+{
+    color: rgb(210, 210, 210);
+    border-color: rgb(180, 180, 180);
+}
+
+.larger-fancy-button
+{
+     width: 7vw;
+}
