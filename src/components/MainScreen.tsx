@@ -13,8 +13,8 @@ interface GuessHandlerArguments
     }>,
     guessesRemaining: number,
     updateGuessesRemaining: React.Dispatch<React.SetStateAction<number>>, 
-    wrongGuesses: string[],
-    updateWrongGuesses: React.Dispatch<React.SetStateAction<string[]>>,
+    previousGuesses: string[],
+    updatePreviousGuesses: React.Dispatch<React.SetStateAction<string[]>>,
     updateRoundResult: React.Dispatch<React.SetStateAction<boolean>>
 }
 
@@ -38,7 +38,10 @@ const uppercaseAsciiHigh = 90;
 const lowercaseAsciiLow = 97;
 const lowercaseAsciiHigh = 122;
 const emptyString = "";
-const wrongGuessString = "❌ ";
+const correctGuessEmoji = "✅  ";
+const wrongGuessEmoji = "❌  ";
+const normalizationForm = "NFD";
+const githubPagesLink = "https://boredomu.github.io/boredle/";
 const jsonFile = "https://raw.githubusercontent.com/boredomu/boredle/refs/heads/main/Heardle%20Data%20-%20JSON.json";
 const playImage = "https://raw.githubusercontent.com/boredomu/boredle/refs/heads/main/public/play.png";
 const pauseImage = "https://raw.githubusercontent.com/boredomu/boredle/refs/heads/main/public/pause.png";
@@ -46,6 +49,7 @@ const volumeWarningString = "WARNING: This is EXTREMELY LOUD, so adjust your bro
 const replacedByEmbedId = "replacedByEmbed";
 const playbackButtonId = "playbackButton";
 const trackUriString = "spotify:track:";
+const typedGuessPlaceholderText = "Guess the track name; guessing the artist is optional"
 const clickEventName = "click";
 const playbackUpdateEventName = "playback_update";
 const dataReadyEventName = "dataReadyEvent";
@@ -95,7 +99,7 @@ function homogeneousList(repeatedElement: any, length: number)
 // Returns strings that account for variance in user input
 function filterString(givenString: string)
 {
-    givenString = givenString.toLowerCase().trim();
+    givenString = givenString.toLowerCase().trim().normalize(normalizationForm);
 
     let returnedString = "";
     let charIndex = firstElement;
@@ -152,18 +156,20 @@ function endRound()
 }
 
 // Handles guess logic
-function guessHandler({result, currentTrack, guessesRemaining, updateGuessesRemaining, wrongGuesses, updateWrongGuesses, updateRoundResult}: GuessHandlerArguments)
+function guessHandler({result, currentTrack, guessesRemaining, updateGuessesRemaining, previousGuesses, updatePreviousGuesses, updateRoundResult}: GuessHandlerArguments)
 {
     result.preventDefault();
     updateGuessesRemaining(guessesRemaining - decrement);
 
-    const userGuess = result.target[typedGuessIndex].value;
+    let userGuess = result.target[typedGuessIndex].value;
     const trackName = filterString(currentTrack.current[trackKey]);
-    const correctGuess = filterString(userGuess) == trackName;
+    const artistName = filterString(currentTrack.current[artistKey]);
+    const correctTrackGuess = filterString(userGuess) == trackName;
+    const correctArtistGuess = filterString(userGuess).search(artistName);
     const noGuessesLeft = guessesRemaining == oneGuessLeft;
-    if(correctGuess || noGuessesLeft)
+    if(correctTrackGuess || noGuessesLeft)
     {
-        if(correctGuess)
+        if(correctTrackGuess)
         {
             updateRoundResult(roundWon);
         }
@@ -174,9 +180,18 @@ function guessHandler({result, currentTrack, guessesRemaining, updateGuessesRema
     {
         result.target.reset();
 
-        const updatedState = wrongGuesses;
-        wrongGuesses[startingGuesses - guessesRemaining] = userGuess;
-        updateWrongGuesses(updatedState);
+        if(correctArtistGuess >= defaultToZero)
+        {
+            userGuess = correctGuessEmoji + userGuess;
+        }
+        else
+        {
+            userGuess = wrongGuessEmoji + userGuess;
+        }
+
+        const updatedState = previousGuesses;
+        previousGuesses[startingGuesses - guessesRemaining] = userGuess;
+        updatePreviousGuesses(updatedState);
     }
 }
 
@@ -188,7 +203,7 @@ function MainScreen()
     const [roundResult, updateRoundResult] = useState(roundLost);
     const [playbackButtonVisibility, updatePlaybackButtonVisibility] = useState(notVisible);
     const [playbackButtonImage, updatePlaybackButtonImage] = useState(playImage)
-    const [wrongGuesses, updateWrongGuesses] = useState(defaultWrongGuessesList);
+    const [previousGuesses, updatePreviousGuesses] = useState(defaultWrongGuessesList);
     const currentTrack = useRef(defaultTrackObject);
 
     // Inline CSS objects
@@ -219,6 +234,9 @@ function MainScreen()
                 album: randomTrack[albumKey],
                 track_id: randomTrackId
             };
+
+            // Logging the track object in console
+            console.log(randomTrack);
 
             const element = document.getElementById(replacedByEmbedId); 
             const options = {
@@ -264,7 +282,7 @@ function MainScreen()
     return(
         <div>
             <span id={replacedByEmbedId}></span>
-            <h1 className="header centered">Boredle</h1>
+            <a className="header centered" href={githubPagesLink}>Boredle</a>
             {
                 gameState
                 ?   
@@ -275,10 +293,10 @@ function MainScreen()
                                 <table className="auto-margin large-width centered">
                                     <tbody>
                                         {
-                                            wrongGuesses.map((currentGuess: string, guessIndex: number) => {
+                                            previousGuesses.map((currentGuess: string) => {
                                                 return(
                                                     <tr>
-                                                        <td className="wrong-guess-row">{guessIndex < (startingGuesses - guessesRemaining) && wrongGuessString}{currentGuess}</td>
+                                                        <td className="wrong-guess-row">{currentGuess}</td>
                                                     </tr>
                                                 )
                                             })
@@ -287,10 +305,10 @@ function MainScreen()
                                 </table>
                             </div>
                             <input id={playbackButtonId} className="spacing" type="button" style={{...inlineDisplay, ...inlineBackgroundImage}}></input>
-                            <form className="spacing" onSubmit={(result) => {guessHandler({result, currentTrack, guessesRemaining, updateGuessesRemaining, wrongGuesses, updateWrongGuesses, updateRoundResult})}}>
-                                <input id="giveUp" className="fancy-button blue-background" type="button" onClick={endRound} value="Give Up"></input>
-                                <input id="typedGuess" type="text" placeholder="Guess the track..." autoComplete="off"></input>
-                                <input id="submitGuess" className="fancy-button grey-background" type="submit" value="Guess"></input>
+                            <form className="spacing" onSubmit={(result) => {guessHandler({result, currentTrack, guessesRemaining, updateGuessesRemaining, previousGuesses, updatePreviousGuesses, updateRoundResult})}}>
+                                <input id="giveUp" className="fancy-button grey-background" type="button" onClick={endRound} value="Give Up"></input>
+                                <input id="typedGuess" type="text" placeholder={typedGuessPlaceholderText} autoComplete="off"></input>
+                                <input id="submitGuess" className="fancy-button blue-background" type="submit" value="Guess"></input>
                             </form>
                         </div>
                     </>

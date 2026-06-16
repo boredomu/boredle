@@ -12,9 +12,13 @@ body
     margin: 0px;
 }
 
-h1
+a
 {
+    display: block;
+    color: white;
     font-size: 40px;
+    font-weight: bold;
+    text-decoration: none;
 }
 
 table
