@@ -1,6 +1,6 @@
 {
   "name": "heardle",
-  "homepage": "https://boredomu.github.io/music-guessing-game/",
+  "homepage": "https://boredomu.github.io/boredle/",
   "private": true,
   "version": "0.0.0",
   "type": "module",
