@@ -131,6 +131,13 @@ table
     text-align: center;
 }
 
+.mini-text
+{
+    margin: 0px;
+    height: 12px;
+    font-size: 12px;
+}
+
 .red-text
 {
     color: indianred;
@@ -144,6 +151,11 @@ table
 .grey-text
 {
     color: darkgrey;
+}
+
+.light-grey-text
+{
+    color: rgb(180, 180, 180);
 }
 
 .dark-background

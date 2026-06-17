@@ -15,7 +15,8 @@ interface GuessHandlerArguments
     updateGuessesRemaining: React.Dispatch<React.SetStateAction<number>>, 
     previousGuesses: string[],
     updatePreviousGuesses: React.Dispatch<React.SetStateAction<string[]>>,
-    updateRoundResult: React.Dispatch<React.SetStateAction<boolean>>
+    updateRoundResult: React.Dispatch<React.SetStateAction<boolean>>,
+    updateSearchedTrackName: React.Dispatch<React.SetStateAction<string>>
 }
 
 // Constants
@@ -28,6 +29,7 @@ const increment = 1;
 const decrement = 1;
 const oneGuessLeft = 1;
 const oneElement = 1;
+const secondChar = 1;
 const minimumGuessLength = 2;
 const singleSpaceAscii = 32;
 const openBracketAscii = 40;
@@ -39,9 +41,11 @@ const uppercaseAsciiHigh = 90;
 const lowercaseAsciiLow = 97;
 const lowercaseAsciiHigh = 122;
 const emptyString = "";
+const ellipses = "...";
 const correctGuessEmoji = "✅  ";
 const wrongGuessEmoji = "❌  ";
 const normalizationForm = "NFD";
+const tabKey = "Tab";
 const githubPagesLink = "https://boredomu.github.io/boredle/";
 const jsonFile = "https://raw.githubusercontent.com/boredomu/boredle/refs/heads/main/Heardle%20Data%20-%20JSON.json";
 const playImage = "https://raw.githubusercontent.com/boredomu/boredle/refs/heads/main/public/play.png";
@@ -50,7 +54,6 @@ const volumeWarningString = "WARNING: This is EXTREMELY LOUD, so adjust your bro
 const replacedByEmbedId = "replacedByEmbed";
 const playbackButtonId = "playbackButton";
 const trackUriString = "spotify:track:";
-const typedGuessPlaceholderText = "Guess the track name; guessing the artist is optional"
 const clickEventName = "click";
 const playbackUpdateEventName = "playback_update";
 const dataReadyEventName = "dataReadyEvent";
@@ -63,9 +66,6 @@ const defaultTrackObject = {
     album: emptyString,
     track_id: emptyString
 };
-
-// Variable declarations
-let trackList = [defaultTrackObject];
 
 // Local dictionary keys
 const dataKey = "data";
@@ -82,6 +82,7 @@ const roundWon = true;
 const notVisible = "none";
 const visible = "inline";
 const defaultWrongGuessesList = homogeneousList(emptyString, startingGuesses);
+const defaultPlaceholderText = "Guess the track name; guessing the artist is optional"
 
 // Create a list with a specific length that contains a given element
 function homogeneousList(repeatedElement: any, length: number)
@@ -157,7 +158,7 @@ function endRound()
 }
 
 // Handles guess logic
-function guessHandler({result, currentTrack, guessesRemaining, updateGuessesRemaining, previousGuesses, updatePreviousGuesses, updateRoundResult}: GuessHandlerArguments)
+function guessHandler({result, currentTrack, guessesRemaining, updateGuessesRemaining, previousGuesses, updatePreviousGuesses, updateRoundResult, updateSearchedTrackName}: GuessHandlerArguments)
 {
     result.preventDefault();
     updateGuessesRemaining(guessesRemaining - decrement);
@@ -180,6 +181,7 @@ function guessHandler({result, currentTrack, guessesRemaining, updateGuessesRema
     else
     {
         result.target.reset();
+        updateSearchedTrackName(emptyString);
 
         if(correctArtistGuess >= defaultToZero && userGuess.length >= minimumGuessLength)
         {
@@ -205,7 +207,57 @@ function MainScreen()
     const [playbackButtonVisibility, updatePlaybackButtonVisibility] = useState(notVisible);
     const [playbackButtonImage, updatePlaybackButtonImage] = useState(playImage)
     const [previousGuesses, updatePreviousGuesses] = useState(defaultWrongGuessesList);
+    const [searchedTrackName, updateSearchedTrackName] = useState(emptyString);
+    const trackList = useRef([defaultTrackObject]);
     const currentTrack = useRef(defaultTrackObject);
+
+    // Search for track names as you type guesses
+    function searchAsYouType(searchEvent: any)
+    {
+        const typedGuess = searchEvent.target.value.toLowerCase().trim().normalize(normalizationForm);
+
+        if(typedGuess == emptyString)
+        {
+            updateSearchedTrackName(emptyString);
+        }
+        else
+        {
+            let closestTrackNameMatch = ellipses;
+            let currentTrackIndex = defaultToZero;
+            const trackListLength = trackList.current.length;
+            while(currentTrackIndex < trackListLength)
+            {
+                const currentTrackName = trackList.current[currentTrackIndex][trackKey];
+                const typedGuessFoundLessFiltered = currentTrackName.toLowerCase().trim().search(typedGuess) >= defaultToZero
+                const typedGuessFoundFiltered = filterString(currentTrackName).search(typedGuess) >= defaultToZero;
+                if(typedGuessFoundLessFiltered || typedGuessFoundFiltered)
+                {
+                    closestTrackNameMatch = "\"" + currentTrackName + "\"";
+                    break;
+                }
+
+                currentTrackIndex += increment;
+            }
+            updateSearchedTrackName(closestTrackNameMatch);
+        }
+    }
+
+    // Custom tab functionality when typing guesses
+    function customTabFunctionality(keyEvent: any)
+    {
+        const keyPressed = keyEvent.key;
+        const originatingInputForm = keyEvent.target;
+        if(keyPressed == tabKey)
+        {
+            keyEvent.preventDefault();
+
+            if(searchedTrackName != ellipses)
+            {
+                const secondLastChar = searchedTrackName.length - decrement;
+                originatingInputForm.value = searchedTrackName.substring(secondChar, secondLastChar);
+            }
+        }
+    }
 
     // Inline CSS objects
     let inlineDisplay = {
@@ -219,15 +271,15 @@ function MainScreen()
         // response.json() returns another promise object
         fetch(jsonFile).then(response =>
             response.json().then(data => {
-                trackList = data;
+                trackList.current = data;
                 document.dispatchEvent(dataReadyEvent);
         }))
 
         // Wait for the JSON file before picking the track
         document.addEventListener(dataReadyEventName, () => {
-            const numberOfTracks = trackList.length;
+            const numberOfTracks = trackList.current.length;
             const randomIndex = Math.floor(Math.random() * numberOfTracks);
-            const randomTrack = trackList[randomIndex];
+            const randomTrack = trackList.current[randomIndex];
             const randomTrackId = randomTrack[trackIdKey];
             currentTrack.current = {
                 artist: randomTrack[artistKey],
@@ -306,9 +358,10 @@ function MainScreen()
                                 </table>
                             </div>
                             <input id={playbackButtonId} className="spacing" type="button" style={{...inlineDisplay, ...inlineBackgroundImage}}></input>
-                            <form className="spacing" onSubmit={(result) => {guessHandler({result, currentTrack, guessesRemaining, updateGuessesRemaining, previousGuesses, updatePreviousGuesses, updateRoundResult})}}>
+                            <p className="mini-text light-grey-text">{searchedTrackName}</p>
+                            <form className="spacing" onSubmit={(result) => {guessHandler({result, currentTrack, guessesRemaining, updateGuessesRemaining, previousGuesses, updatePreviousGuesses, updateRoundResult, updateSearchedTrackName})}}>
                                 <input id="giveUp" className="fancy-button grey-background" type="button" onClick={endRound} value="Give Up"></input>
-                                <input id="typedGuess" type="text" placeholder={typedGuessPlaceholderText} autoComplete="off"></input>
+                                <input id="typedGuess" type="text" placeholder={defaultPlaceholderText} onInput={searchAsYouType} onKeyDown={customTabFunctionality} autoComplete="off"></input>
                                 <input id="submitGuess" className="fancy-button blue-background" type="submit" value="Guess"></input>
                             </form>
                         </div>
