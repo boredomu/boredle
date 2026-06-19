@@ -45,6 +45,7 @@ const emptyString = "";
 const ellipses = "...";
 const correctGuessEmoji = "✅  ";
 const wrongGuessEmoji = "❌  ";
+const rightArrowSymbol = "▶";
 const normalizationForm = "NFD";
 const tabKey = "Tab";
 const githubPagesLink = "https://boredomu.github.io/boredle/";
@@ -290,7 +291,8 @@ function MainScreen()
                 originatingInputForm.value = currentSearchedTrack.substring(secondChar, secondLastChar);
 
                 let stateClone = structuredClone(searchedTrackName);
-                if(stateClone[indexKey] == stateClone[tracksKey].length - decrement)
+                const numberOfTracks = stateClone[tracksKey].length;
+                if(stateClone[indexKey] == numberOfTracks - decrement)
                 {
                     stateClone[indexKey] = defaultToZero;
                 }
@@ -403,7 +405,7 @@ function MainScreen()
                                 </table>
                             </div>
                             <input id={playbackButtonId} className="spacing" type="button" style={{...inlineDisplay, ...inlineBackgroundImage}}></input>
-                            <p className="mini-text light-grey-text">{searchedTrackName[tracksKey][searchedTrackName[indexKey]]} {(searchedTrackName[tracksKey][firstElement] != emptyString && searchedTrackName[tracksKey][firstElement] != ellipses) && "(" + (searchedTrackName[indexKey] + increment) + "/" + searchedTrackName[tracksKey].length + ")"}</p>
+                            <p className="mini-text light-grey-text">{(searchedTrackName[tracksKey][firstElement] != emptyString && searchedTrackName[tracksKey][firstElement] != ellipses) && rightArrowSymbol} {searchedTrackName[tracksKey][searchedTrackName[indexKey]]} {(searchedTrackName[tracksKey][firstElement] != emptyString && searchedTrackName[tracksKey][firstElement] != ellipses) && "(" + (searchedTrackName[indexKey] + increment) + "/" + searchedTrackName[tracksKey].length + ")"}</p>
                             <form className="spacing" onSubmit={(result) => {guessHandler({result, currentTrack, guessesRemaining, updateGuessesRemaining, previousGuesses, updatePreviousGuesses, updateRoundResult, updateSearchedTrackName})}}>
                                 <input id="giveUp" className="fancy-button grey-background" type="button" onClick={endRound} value="Give Up"></input>
                                 <input id="typedGuess" type="text" placeholder={defaultPlaceholderText} onInput={searchAsYouType} onKeyDown={customTabFunctionality} autoComplete="off"></input>
