@@ -249,11 +249,33 @@ function MainScreen()
                 const currentTrackName = trackList.current[currentTrackIndex][trackKey];
                 const typedGuessFoundLessFiltered = currentTrackName.toLowerCase().trim().search(typedGuess) >= defaultToZero
                 const typedGuessFoundFiltered = filterString(currentTrackName).search(typedGuess) >= defaultToZero;
-                if(typedGuessFoundLessFiltered || typedGuessFoundFiltered)
+
+                // Check if the track name has already been indexed
+                let tracks = newSearchedTrackNameObject[tracksKey];
+                let uniqueTrackName = true;
+                let matchingTrackIndex = defaultToZero;
+                if(numberOfMatchingTracks > defaultToZero)
+                {
+                    while(matchingTrackIndex < numberOfMatchingTracks)
+                    {
+                        let currentMatchingTrackName = tracks[matchingTrackIndex];
+                        const secondLastChar = currentMatchingTrackName.length - decrement;
+                        currentMatchingTrackName = currentMatchingTrackName.substring(secondChar, secondLastChar);
+                        
+                        if(currentMatchingTrackName == currentTrackName)
+                        {
+                            uniqueTrackName = false;
+                            break;
+                        }
+
+                        matchingTrackIndex += increment;
+                    }
+                }
+
+                if((typedGuessFoundLessFiltered || typedGuessFoundFiltered) && uniqueTrackName)
                 {
                     closestTrackNameMatch = "\"" + currentTrackName + "\"";
 
-                    let tracks = newSearchedTrackNameObject[tracksKey];
                     if(numberOfMatchingTracks == defaultToZero)
                     {
                         tracks[firstElement] = closestTrackNameMatch;
@@ -408,7 +430,7 @@ function MainScreen()
                             <p className="mini-text light-grey-text">{(searchedTrackName[tracksKey][firstElement] != emptyString && searchedTrackName[tracksKey][firstElement] != ellipses) && rightArrowSymbol} {searchedTrackName[tracksKey][searchedTrackName[indexKey]]} {(searchedTrackName[tracksKey][firstElement] != emptyString && searchedTrackName[tracksKey][firstElement] != ellipses) && "(" + (searchedTrackName[indexKey] + increment) + "/" + searchedTrackName[tracksKey].length + ")"}</p>
                             <form className="spacing" onSubmit={(result) => {guessHandler({result, currentTrack, guessesRemaining, updateGuessesRemaining, previousGuesses, updatePreviousGuesses, updateRoundResult, updateSearchedTrackName})}}>
                                 <input id="giveUp" className="fancy-button grey-background" type="button" onClick={endRound} value="Give Up"></input>
-                                <input id="typedGuess" type="text" placeholder={defaultPlaceholderText} onInput={searchAsYouType} onKeyDown={customTabFunctionality} autoComplete="off"></input>
+                                <input id="typedGuess" type="text" placeholder={defaultPlaceholderText} onInput={searchAsYouType} onKeyDown={customTabFunctionality} autoComplete="off" autoFocus></input>
                                 <input id="submitGuess" className="fancy-button blue-background" type="submit" value="Guess"></input>
                             </form>
                         </div>
