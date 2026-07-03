@@ -22,11 +22,12 @@ function EndScreen({currentTrack, roundResult}: Props)
 {
     const artistName = currentTrack[artistKey];
     const trackName = currentTrack[trackKey];
+    const recordImage = "https://raw.githubusercontent.com/boredomu/boredle/refs/heads/main/public/record.png";
 
     return(
         <div>
             <div className="dark-background fit-content margin-top">
-                <div className="album-placeholder inline-block"></div>
+                <img src={recordImage} className="album-placeholder inline-block"></img>
                 <div className="inline-block">
                     <h2 className="middle-vertical-align inline padding-top padding-horizontal">{trackName}</h2>
                     <h4 className="grey-text middle-vertical-align padding-horizontal">{artistName}</h4>

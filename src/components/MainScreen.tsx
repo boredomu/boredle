@@ -47,7 +47,9 @@ const correctGuessEmoji = "✅  ";
 const wrongGuessEmoji = "❌  ";
 const rightArrowSymbol = "▶";
 const normalizationForm = "NFD";
-const tabKey = "Tab";
+const tabKeyboardKey = "Tab";
+const enterKeyboardKey = "Enter";
+const escapeKeyboardKey = "Escape";
 const githubPagesLink = "https://boredomu.github.io/boredle/";
 const jsonFile = "https://raw.githubusercontent.com/boredomu/boredle/refs/heads/main/Heardle%20Data%20-%20JSON.json";
 const playImage = "https://raw.githubusercontent.com/boredomu/boredle/refs/heads/main/public/play.png";
@@ -59,8 +61,10 @@ const trackUriString = "spotify:track:";
 const clickEventName = "click";
 const playbackUpdateEventName = "playback_update";
 const dataReadyEventName = "dataReadyEvent";
+const togglePlaybackEventName = "togglePlaybackEvent";
 const deleteEmbedEventName = "deleteEmbedEvent";
 const dataReadyEvent = new CustomEvent(dataReadyEventName);
+const togglePlaybackEvent = new CustomEvent(togglePlaybackEventName);
 const deleteEmbedEvent = new CustomEvent(deleteEmbedEventName);
 const defaultTrackObject = {
     artist: emptyString,
@@ -87,6 +91,8 @@ const currentlyPlaying = true;
 const endOfRound = false;
 const roundLost = false;
 const roundWon = true;
+const doNotDisplay = false;
+const doDisplay = true;
 const notVisible = "none";
 const visible = "inline";
 const defaultWrongGuessesList = homogeneousList(emptyString, startingGuesses);
@@ -221,6 +227,7 @@ function MainScreen()
     const [playbackButtonImage, updatePlaybackButtonImage] = useState(playImage)
     const [previousGuesses, updatePreviousGuesses] = useState(defaultWrongGuessesList);
     const [searchedTrackName, updateSearchedTrackName] = useState(defaultSearchedTrackNameObject);
+    const [displayShortcutTips, updateDisplayShortcutTips] = useState(doNotDisplay);
     const trackList = useRef([defaultTrackObject]);
     const currentTrack = useRef(defaultTrackObject);
 
@@ -261,7 +268,7 @@ function MainScreen()
                         let currentMatchingTrackName = tracks[matchingTrackIndex];
                         const secondLastChar = currentMatchingTrackName.length - decrement;
                         currentMatchingTrackName = currentMatchingTrackName.substring(secondChar, secondLastChar);
-                        
+
                         if(currentMatchingTrackName == currentTrackName)
                         {
                             uniqueTrackName = false;
@@ -295,12 +302,15 @@ function MainScreen()
         }
     }
 
-    // Custom tab functionality when typing guesses
-    function customTabFunctionality(keyEvent: any)
+    // Custom key shortcuts inside the typed form
+    function customKeys(keyEvent: any)
     {
         const keyPressed = keyEvent.key;
         const originatingInputForm = keyEvent.target;
-        if(keyPressed == tabKey)
+        const lastSeenInput = originatingInputForm.value.trim();
+
+        // Tab
+        if(keyPressed == tabKeyboardKey)
         {
             keyEvent.preventDefault();
 
@@ -326,6 +336,28 @@ function MainScreen()
                 updateSearchedTrackName(stateClone);
             }
         }
+        // Enter (on an empty guess)
+        else if(keyPressed == enterKeyboardKey && lastSeenInput == emptyString)
+        {
+            document.dispatchEvent(togglePlaybackEvent);
+        }
+        // Escape
+        else if(keyPressed == escapeKeyboardKey)
+        {
+            endRound();
+        }
+    }
+
+    // Display shortcut tips
+    function showShortcutTips()
+    {
+        updateDisplayShortcutTips(doDisplay);
+    }
+
+    // Hide shortcut tips
+    function hideShortcutTips()
+    {
+        updateDisplayShortcutTips(doNotDisplay);
     }
 
     // Inline CSS objects
@@ -370,7 +402,11 @@ function MainScreen()
                 document.addEventListener(deleteEmbedEventName, () => {
                     EmbedController.destroy();
                     updateGameState(endOfRound);
-                })
+                });
+
+                document.addEventListener(togglePlaybackEventName, () => {
+                    EmbedController.togglePlay();
+                });
 
                 const playbackButton = document.getElementById(playbackButtonId);
                 if(playbackButton)
@@ -392,7 +428,7 @@ function MainScreen()
                         {
                             updatePlaybackButtonImage(pauseImage);
                         }
-                    })
+                    });
                 }
             };
 
@@ -430,9 +466,25 @@ function MainScreen()
                             <p className="mini-text light-grey-text">{(searchedTrackName[tracksKey][firstElement] != emptyString && searchedTrackName[tracksKey][firstElement] != ellipses) && rightArrowSymbol} {searchedTrackName[tracksKey][searchedTrackName[indexKey]]} {(searchedTrackName[tracksKey][firstElement] != emptyString && searchedTrackName[tracksKey][firstElement] != ellipses) && "(" + (searchedTrackName[indexKey] + increment) + "/" + searchedTrackName[tracksKey].length + ")"}</p>
                             <form className="spacing" onSubmit={(result) => {guessHandler({result, currentTrack, guessesRemaining, updateGuessesRemaining, previousGuesses, updatePreviousGuesses, updateRoundResult, updateSearchedTrackName})}}>
                                 <input id="giveUp" className="fancy-button grey-background" type="button" onClick={endRound} value="Give Up"></input>
-                                <input id="typedGuess" type="text" placeholder={defaultPlaceholderText} onInput={searchAsYouType} onKeyDown={customTabFunctionality} autoComplete="off" autoFocus></input>
+                                <input id="typedGuess" type="text" placeholder={defaultPlaceholderText} onInput={searchAsYouType} onKeyDown={customKeys} autoComplete="off" onFocus={showShortcutTips} onBlur={hideShortcutTips} autoFocus></input>
                                 <input id="submitGuess" className="fancy-button blue-background" type="submit" value="Guess"></input>
                             </form>
+                            <div>
+                                {
+                                    displayShortcutTips 
+                                    ?
+                                        <>
+                                            <p className="inline mini-text light-grey-text">Enter </p>
+                                            <p className="inline mini-text grey-text">(playback), </p>
+                                            <p className="inline mini-text light-grey-text">Tab </p>
+                                            <p className="inline mini-text grey-text">(match track), </p>
+                                            <p className="inline mini-text light-grey-text">Esc </p>
+                                            <p className="inline mini-text grey-text">(give up)</p>
+                                        </>
+                                    :
+                                        <p className="mini-text"></p>
+                                }
+                            </div>
                         </div>
                     </>
                 :
